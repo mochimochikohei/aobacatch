@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>あおばキャッチ！</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background:
+      linear-gradient(135deg, #0878d1 0%, #19a7e8 50%, #ffd83d 100%);
+    overflow-x: hidden;
+  }
+
+  h1 {
+    margin: 15px 0 4px;
+    color: white;
+    font-size: 36px;
+    text-shadow: 0 3px 0 #07599b;
+  }
+
+  .description {
+    margin: 5px 10px;
+    color: white;
+    font-weight: bold;
+  }
+
+  .info {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 12px auto;
+  }
+
+  .panel {
+    background: #ffd83d;
+    color: #064d89;
+    border: 3px solid white;
+    border-radius: 20px;
+    padding: 8px 18px;
+    min-width: 120px;
+    font-size: 20px;
+    font-weight: bold;
+    box-shadow: 0 4px 0 #e0ab00;
+  }
+
+  #game {
+    position: relative;
+    width: min(92vw, 500px);
+    height: 520px;
+    margin: 8px auto;
+
+    background:
+      linear-gradient(
+        #57c8ff 0%,
+        #b9ebff 70%,
+        #fff4a8 70%,
+        #ffd83d 100%
+      );
+
+    border: 6px solid white;
+    border-radius: 24px;
+    overflow: hidden;
+
+    box-shadow: 0 10px 25px rgba(0, 56, 100, 0.3);
+  }
+
+  #basket {
+    position: absolute;
+    bottom: 10px;
+    left: 210px;
+
+    width: 90px;
+    height: 65px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 55px;
+    z-index: 10;
+  }
+
+  .aoba {
+    position: absolute;
+    top: -80px;
+
+    width: 68px;
+    height: 68px;
+
+    object-fit: cover;
+    border-radius: 50%;
+
+    border: 4px solid #ffd83d;
+
+    box-shadow:
+      0 4px 10px rgba(0,0,0,0.25);
+
+    user-select: none;
+  }
+
+  .bomb {
+    position: absolute;
+    top: -70px;
+    font-size: 50px;
+    user-select: none;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+  }
+
+  .moveButton {
+    width: 115px;
+    height: 58px;
+
+    border: 3px solid white;
+    border-radius: 18px;
+
+    background: #ffd83d;
+    color: #075a9f;
+
+    font-size: 30px;
+    cursor: pointer;
+
+    box-shadow: 0 5px 0 #d6a900;
+  }
+
+  .moveButton:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #d6a900;
+  }
+
+  #message {
+    height: 34px;
+    margin: 10px;
+
+    color: white;
+
+    font-size: 22px;
+    font-weight: bold;
+
+    text-shadow: 0 2px 3px rgba(0,0,0,0.3);
+  }
+
+  #startButton {
+    padding: 14px 35px;
+
+    border: 4px solid white;
+    border-radius: 30px;
+
+    background: #ffd83d;
+    color: #075a9f;
+
+    font-size: 19px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    box-shadow: 0 5px 0 #c99c00;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>🌟 あおばキャッチ！ 🌟</h1>
+
+<p class="description">
+落ちてくる「あおば」をキャッチしよう！<br>
+💣を取るとマイナス2点！
+</p>
+
+<div class="info">
+
+  <div class="panel">
+    ⏱ <span id="time">30</span>秒
+  </div>
+
+  <div class="panel">
+    ⭐ <span id="score">0</span>点
+  </div>
+
+</div>
+
+<div id="game">
+  <div id="basket">🧺</div>
+</div>
+
+<div class="controls">
+
+  <button class="moveButton"
+          onclick="moveLeft()">
+    ⬅️
+  </button>
+
+  <button class="moveButton"
+          onclick="moveRight()">
+    ➡️
+  </button>
+
+</div>
+
+<div id="message"></div>
+
+<button id="startButton"
+        onclick="startGame()">
+
+ゲームスタート！
+
+</button>
+
+<script>
+
+const game =
+  document.getElementById("game");
+
+const basket =
+  document.getElementById("basket");
+
+let basketX = 210;
+
+let score = 0;
+
+let time = 30;
+
+let playing = false;
+
+let timer;
+
+let spawnTimer;
+
+
+// --------------------
+// カゴ移動
+// --------------------
+
+function updateBasket() {
+
+  const maxX =
+    game.clientWidth -
+    basket.offsetWidth;
+
+  if (basketX < 0)
+    basketX = 0;
+
+  if (basketX > maxX)
+    basketX = maxX;
+
+  basket.style.left =
+    basketX + "px";
+}
+
+
+function moveLeft() {
+
+  if (!playing) return;
+
+  basketX -= 50;
+
+  updateBasket();
+}
+
+
+function moveRight() {
+
+  if (!playing) return;
+
+  basketX += 50;
+
+  updateBasket();
+}
+
+
+// PCの矢印キー
+
+document.addEventListener(
+  "keydown",
+  function(event) {
+
+    if (event.key === "ArrowLeft")
+      moveLeft();
+
+    if (event.key === "ArrowRight")
+      moveRight();
+
+  }
+);
+
+
+// --------------------
+// 落下物
+// --------------------
+
+function createFallingItem() {
+
+  if (!playing)
+    return;
+
+
+  // 80% あおば
+  // 20% 爆弾
+
+  const isAoba =
+    Math.random() < 0.8;
+
+
+  let item;
+
+
+  // あおばの場合
+
+  if (isAoba) {
+
+    item =
+      document.createElement("img");
+
+    item.src = "aoba.jpg";
+
+    item.className = "aoba";
+
+    item.alt = "あおば";
+
+  }
+
+
+  // 爆弾の場合
+
+  else {
+
+    item =
+      document.createElement("div");
+
+    item.className = "bomb";
+
+    item.textContent = "💣";
+
+  }
+
+
+  let x =
+    Math.random() *
+    (game.clientWidth - 75);
+
+
+  let y = -80;
+
+
+  item.style.left =
+    x + "px";
+
+  item.style.top =
+    y + "px";
+
+
+  game.appendChild(item);
+
+
+  const fallSpeed =
+    3 +
+    Math.random() * 2;
+
+
+  const fall =
+    setInterval(
+      function() {
+
+
+        if (!playing) {
+
+          clearInterval(fall);
+
+          item.remove();
+
+          return;
+        }
+
+
+        y += fallSpeed;
+
+        item.style.top =
+          y + "px";
+
+
+        const itemRect =
+          item.getBoundingClientRect();
+
+        const basketRect =
+          basket.getBoundingClientRect();
+
+
+        // --------------------
+        // キャッチ判定
+        // --------------------
+
+        if (
+
+          itemRect.bottom >=
+            basketRect.top &&
+
+          itemRect.top <=
+            basketRect.bottom &&
+
+          itemRect.right >=
+            basketRect.left &&
+
+          itemRect.left <=
+            basketRect.right
+
+        ) {
+
+
+          if (isAoba) {
+
+            score += 1;
+
+            showMessage(
+              "🌟 あおばキャッチ！ +1"
+            );
+
+          }
+
+          else {
+
+            score -= 2;
+
+            showMessage(
+              "💥 爆弾！ -2"
+            );
+
+          }
+
+
+          document
+            .getElementById("score")
+            .textContent = score;
+
+
+          clearInterval(fall);
+
+          item.remove();
+
+          return;
+        }
+
+
+        // 下まで落下
+
+        if (
+          y >
+          game.clientHeight
+        ) {
+
+          clearInterval(fall);
+
+          item.remove();
+
+        }
+
+
+      },
+      16
+    );
+
+}
+
+
+// --------------------
+// メッセージ
+// --------------------
+
+function showMessage(text) {
+
+  const message =
+    document.getElementById(
+      "message"
+    );
+
+  message.textContent = text;
+
+}
+
+
+// --------------------
+// ゲーム開始
+// --------------------
+
+function startGame() {
+
+  score = 0;
+
+  time = 30;
+
+  playing = true;
+
+
+  basketX =
+    (
+      game.clientWidth -
+      basket.offsetWidth
+    ) / 2;
+
+
+  updateBasket();
+
+
+  document
+    .getElementById("score")
+    .textContent = score;
+
+
+  document
+    .getElementById("time")
+    .textContent = time;
+
+
+  document
+    .getElementById("message")
+    .textContent = "";
+
+
+  document
+    .getElementById(
+      "startButton"
+    )
+    .style.display =
+    "none";
+
+
+  // 0.7秒ごとに
+  // 落下物を出す
+
+  spawnTimer =
+    setInterval(
+      createFallingItem,
+      700
+    );
+
+
+  // タイマー
+
+  timer =
+    setInterval(
+
+      function() {
+
+        time--;
+
+        document
+          .getElementById("time")
+          .textContent =
+          time;
+
+
+        if (time <= 0) {
+
+          playing =
+            false;
+
+          clearInterval(
+            timer
+          );
+
+          clearInterval(
+            spawnTimer
+          );
+
+
+          document
+            .getElementById(
+              "message"
+            )
+            .textContent =
+            "🏁 終了！ " +
+            score +
+            "点でした！";
+
+
+          const startButton =
+            document
+              .getElementById(
+                "startButton"
+              );
+
+
+          startButton
+            .textContent =
+            "もう一度遊ぶ";
+
+
+          startButton
+            .style.display =
+            "inline-block";
+
+        }
+
+      },
+
+      1000
+    );
+
+}
+
+
+updateBasket();
+
+</script>
+
+</body>
+</html>
